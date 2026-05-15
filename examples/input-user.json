@@ -1,0 +1,7 @@
+{
+  "user": {
+    "name": "bob",
+    "role": "developer"
+  },
+  "action": "read"
+}
