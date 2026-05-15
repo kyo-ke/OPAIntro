@@ -16,7 +16,7 @@ Policy as Code with Open Policy Agent
 1. What is OPA?
 2. OPA architecture
 3. What is OPA policy?
-4. Input and data
+4. Input, base documents, and virtual documents
 5. Basic policy example in Rego
 6. Using OPA from the CLI
 7. Running OPA as a server
@@ -49,20 +49,20 @@ Policy as Code with Open Policy Agent
 
 ---
 
-# Input and data
+# Input, base documents, and virtual documents
 
-- OPA evaluates arbitrary structured data
+- OPA evaluates policies over structured documents
 - `input` is the data provided for the current decision request
-- `data` is the document space for loaded data and policy results
-- OPA evaluates policy using the current `input` and available `data`
-- Policy rules can produce results that become visible under `data`
+- Pre-loaded JSON/YAML data under `data` are base documents
+- Policy evaluates the current `input` together with pre-loaded base documents
+- Policy rules generate virtual documents that are queried under `data`
 
 ---
 
-# Input and data example
+# Example: input, base documents, and virtual documents
 
 - In practice, `input` is often passed as JSON in CLI or HTTP requests
-- `data` is commonly loaded from policy bundles or data files
+- Base documents under `data` are commonly loaded from policy bundles or data files
 
 Example data
 
@@ -95,9 +95,10 @@ Example input
 ```
 
 - In this example, the JSON value would be available as `input`
-- The roles and permissions JSON would be available under `data`
-- A policy rule can also produce a result that is queried from `data`
-- So `input` is not turned into `data`; rule results are exposed under `data`
+- The roles and permissions JSON would be available as base documents under `data.example.authz`
+- The policy evaluates `input` together with those base documents
+- The `allow` rule result is a virtual document visible as `data.example.authz.allow`
+- So `input` is not written into `data`; policy rules generate virtual documents under `data`
 
 ---
 
@@ -117,9 +118,9 @@ allow if {
 
 - This Rego module defines policy in the `example.authz` package
 - OPA evaluates this policy with both `input` and `data`
-- The result of the `allow` rule is visible as `data.example.authz.allow`
+- The result of the `allow` rule is visible as the virtual document `data.example.authz.allow`
 - `default allow := false` defines the default decision
-- `data.example.authz.roles` and `data.example.authz.role_permissions` are base data
+- `data.example.authz.roles` and `data.example.authz.role_permissions` are base documents
 - This policy returns `true` when the user's role allows the requested action
 
 ---
@@ -183,8 +184,9 @@ curl localhost:8181/v1/data/example/authz/allow \
 - OPA policy defines the decision logic
 - Rego is the language used to write OPA policies
 - OPA evaluates policy using `input` and `data`
-- Policy results can be queried under `data`
-- `input` is request data, while `data` contains loaded data and policy results
+- `input` is request data for the current decision
+- Pre-loaded data under `data` are base documents
+- Policy results queried under `data` are virtual documents
 - You can use OPA from the CLI or run it as a server
 - This makes policy reusable and testable
 
