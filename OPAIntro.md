@@ -14,13 +14,20 @@ Policy as Code with Open Policy Agent
 # Table of Contents
 
 1. What is OPA?
-2. What is OPA policy?
-3. Input and data
-4. Basic policy example in Rego
-5. Using OPA from the CLI
-6. Running OPA as a server
-7. Where can we use OPA?
-8. Summary
+2. OPA architecture
+3. What is OPA policy?
+4. Input and data
+5. Basic policy example in Rego
+6. Using OPA from the CLI
+7. Running OPA as a server
+8. Where can we use OPA?
+9. Summary
+
+---
+
+# OPA architecture
+
+<img src="./OPAArch.png" width="600">
 
 ---
 
