@@ -1,0 +1,14 @@
+{
+  "example": {
+    "authz": {
+      "roles": {
+        "alice": "admin",
+        "bob": "developer"
+      },
+      "role_permissions": {
+        "admin": ["read", "write"],
+        "developer": ["read"]
+      }
+    }
+  }
+}

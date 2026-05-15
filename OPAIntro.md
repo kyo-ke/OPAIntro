@@ -35,7 +35,7 @@ Policy as Code with Open Policy Agent
 
 - OPA is an open source, general-purpose policy engine
 - Services send structured input to OPA and receive policy decisions
-- OPA evaluates input against policy and data
+- OPA evaluates policy using `input` and `data`
 - It can return booleans, lists, objects, and other structured results
 
 ---
@@ -55,7 +55,7 @@ Policy as Code with Open Policy Agent
 - `input` is the data provided for the current decision request
 - `data` is the document space for loaded data and policy results
 - OPA evaluates policy using the current `input` and available `data`
-- Policy rules can produce results that are visible under `data`
+- Policy rules can produce results that become visible under `data`
 
 ---
 
@@ -64,25 +64,40 @@ Policy as Code with Open Policy Agent
 - In practice, `input` is often passed as JSON in CLI or HTTP requests
 - `data` is commonly loaded from policy bundles or data files
 
+Example data
+
+```json
+{
+  "example": {
+    "authz": {
+      "roles": {
+        "alice": "admin",
+        "bob": "developer"
+      },
+      "role_permissions": {
+        "admin": ["read", "write"],
+        "developer": ["read"]
+      }
+    }
+  }
+}
+```
+
 Example input
 
 ```json
 {
     "user": {
-        "name": "alice",
-        "role": "admin"
+    "name": "alice"
     },
-    "action": "read",
-    "resource": {
-        "type": "document",
-        "owner": "team-a"
-    }
+  "action": "read"
 }
 ```
 
 - In this example, the JSON value would be available as `input`
-- A policy can read existing values from `data`, such as roles or ACLs
+- The roles and permissions JSON would be available under `data`
 - A policy rule can also produce a result that is queried from `data`
+- So `input` is not turned into `data`; rule results are exposed under `data`
 
 ---
 
@@ -94,16 +109,18 @@ package example.authz
 default allow := false
 
 allow if {
-  input.user.role == "admin"
+  role := data.example.authz.roles[input.user.name]
+  allowed_actions := data.example.authz.role_permissions[role]
+  input.action in allowed_actions
 }
 ```
 
 - This Rego module defines policy in the `example.authz` package
-- OPA evaluates this policy with `input.user.role`
+- OPA evaluates this policy with both `input` and `data`
 - The result of the `allow` rule is visible as `data.example.authz.allow`
 - `default allow := false` defines the default decision
-- `input.user.role` reads from the input document
-- This policy returns `true` only for admin users
+- `data.example.authz.roles` and `data.example.authz.role_permissions` are base data
+- This policy returns `true` when the user's role allows the requested action
 
 ---
 
@@ -119,7 +136,8 @@ opa version
 Evaluate a policy
 
 ```bash
-opa eval -d examples/authz.rego -i examples/input-admin.json "data.example.authz.allow"
+opa eval -d examples/authz.rego -d examples/authz-data.json \
+  -i examples/input-admin.json "data.example.authz.allow"
 ```
 
 - Use `-d` to load policy or data
@@ -133,7 +151,7 @@ opa eval -d examples/authz.rego -i examples/input-admin.json "data.example.authz
 Start server
 
 ```bash
-opa run --server examples/authz.rego
+opa run --server examples/authz.rego examples/authz-data.json
 ```
 
 Query allow decision
@@ -141,10 +159,11 @@ Query allow decision
 ```bash
 curl localhost:8181/v1/data/example/authz/allow \
   -H 'Content-Type: application/json' \
-  -d '{"input": {"user": {"name": "alice", "role": "admin"}, "action": "read"}}'
+  -d '{"input": {"user": {"name": "alice"}, "action": "read"}}'
 ```
 
 - Request body wraps the value inside `{ "input": ... }`
+- This server example loads both policy and base data before receiving input
 - Good for application integration
 
 ---
@@ -165,6 +184,7 @@ curl localhost:8181/v1/data/example/authz/allow \
 - Rego is the language used to write OPA policies
 - OPA evaluates policy using `input` and `data`
 - Policy results can be queried under `data`
+- `input` is request data, while `data` contains loaded data and policy results
 - You can use OPA from the CLI or run it as a server
 - This makes policy reusable and testable
 

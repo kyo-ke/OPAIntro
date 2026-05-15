@@ -1,7 +1,6 @@
 {
   "user": {
-    "name": "alice",
-    "role": "admin"
+    "name": "alice"
   },
   "action": "read"
 }

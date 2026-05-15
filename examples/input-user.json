@@ -1,7 +1,6 @@
 {
   "user": {
-    "name": "bob",
-    "role": "developer"
+    "name": "bob"
   },
-  "action": "read"
+  "action": "write"
 }
